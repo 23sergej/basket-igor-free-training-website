@@ -1,30 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Website</title>
-  <meta name="description" content="A simple static website.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#101418">
+  <title>Баскетбольная тренировка — пошаговый план</title>
+  <meta name="description" content="Интерактивная пошаговая тренировка по баскетболу для подростков: разминка, дриблинг, изменение направления, броски, финиш у кольца и челлендж.">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header>
-    <h1>My Website</h1>
-    <p>Welcome — this site is under construction.</p>
+
+  <!-- Верхняя панель: прогресс -->
+  <header class="topbar" aria-label="Прогресс тренировки">
+    <div class="topbar-row">
+      <span id="step-counter" class="step-counter">Шаг 1 из 17</span>
+      <span id="section-badge" class="section-badge">🏀 Разминка</span>
+    </div>
+    <div class="progress-track" aria-hidden="true">
+      <div id="progress-bar" class="progress-fill" style="width:0%"></div>
+    </div>
   </header>
 
-  <main>
-    <section>
-      <h2>About</h2>
-      <p>
-        This is a simple static website built with plain HTML and CSS,
-        deployed automatically to Cloudflare Pages from GitHub.
-      </p>
-    </section>
+  <main id="app">
+    <!-- Карточка упражнения (заполняется скриптом) -->
+    <article class="card" id="card" aria-live="polite">
+      <div class="card-head">
+        <span id="step-icon" class="step-icon" aria-hidden="true">🔥</span>
+        <div>
+          <h1 id="step-title" class="step-title">Упражнение</h1>
+          <p id="step-goal" class="step-goal">Цель</p>
+        </div>
+      </div>
+
+      <!-- Таймер -->
+      <div class="timer" id="timer-box">
+        <div id="timer-time" class="timer-time">03:00</div>
+        <div class="timer-buttons">
+          <button id="timer-start" class="btn btn-timer" type="button">▶ Старт</button>
+          <button id="timer-reset" class="btn btn-timer btn-timer-reset" type="button" aria-label="Сбросить таймер">↺</button>
+        </div>
+      </div>
+
+      <!-- Описание -->
+      <ul id="step-points" class="step-points"></ul>
+
+      <p id="step-tip" class="step-tip" hidden></p>
+    </article>
   </main>
 
-  <footer>
-    <p>&copy; 2025 My Website. All rights reserved.</p>
-  </footer>
+  <!-- Экран завершения -->
+  <main id="finish-screen" class="finish-screen" hidden>
+    <div class="card finish-card">
+      <span class="finish-emoji" aria-hidden="true">🏆</span>
+      <h1 class="step-title">Тренировка завершена!</h1>
+      <p class="finish-text">Отличная работа! Ты прошёл все шаги — разминку, дриблинг, смену направления, броски и финиш у кольца.</p>
+      <ul class="finish-stats">
+        <li><strong id="finish-steps">17</strong><span>упражнений выполнено</span></li>
+        <li><strong>~60</strong><span>минут работы</span></li>
+      </ul>
+      <button id="restart-btn" class="btn btn-primary btn-big" type="button">↺ Начать заново</button>
+    </div>
+  </main>
+
+  <!-- Нижняя навигация -->
+  <nav class="navbar" aria-label="Навигация по шагам">
+    <button id="prev-btn" class="btn btn-nav" type="button">← Назад</button>
+    <button id="next-btn" class="btn btn-nav btn-primary" type="button">Вперёд →</button>
+  </nav>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
