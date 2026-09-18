@@ -1,0 +1,7 @@
+services:
+  ai:
+    image: ghcr.io/menkoff-agency/pi:npm
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
