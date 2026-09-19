@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#101418">
+  <meta name="theme-color" content="#0b0e13">
   <title>Баскетбольная тренировка — пошаговый план</title>
   <meta name="description" content="Интерактивная пошаговая тренировка по баскетболу для подростков: разминка, дриблинг, изменение направления, броски, финиш у кольца и челлендж.">
   <link rel="stylesheet" href="css/style.css">
@@ -37,6 +37,7 @@
         <div id="timer-time" class="timer-time">03:00</div>
         <div class="timer-buttons">
           <button id="timer-start" class="btn btn-timer" type="button">▶ Старт</button>
+          <button id="timer-sound" class="btn btn-timer btn-timer-reset" type="button" aria-label="Выключить звук">🔊</button>
           <button id="timer-reset" class="btn btn-timer btn-timer-reset" type="button" aria-label="Сбросить таймер">↺</button>
         </div>
       </div>
@@ -47,6 +48,13 @@
       <p id="step-tip" class="step-tip" hidden></p>
     </article>
   </main>
+
+  <!-- Оверлей «время вышло» -->
+  <div id="alarm-overlay" class="alarm-overlay" hidden role="alertdialog" aria-label="Время вышло">
+    <span class="alarm-emoji" aria-hidden="true">⏰</span>
+    <p class="alarm-text">Время вышло!</p>
+    <p class="alarm-hint">Коснитесь экрана, чтобы остановить</p>
+  </div>
 
   <!-- Экран завершения -->
   <main id="finish-screen" class="finish-screen" hidden>

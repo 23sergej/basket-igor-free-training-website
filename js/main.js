@@ -254,6 +254,8 @@ const els = {
   timerTime: document.getElementById('timer-time'),
   timerStart: document.getElementById('timer-start'),
   timerReset: document.getElementById('timer-reset'),
+  soundBtn: document.getElementById('timer-sound'),
+  alarm: document.getElementById('alarm-overlay'),
   finish: document.getElementById('finish-screen'),
   finishSteps: document.getElementById('finish-steps'),
   prevBtn: document.getElementById('prev-btn'),
@@ -265,6 +267,74 @@ const STORE_KEY = 'basketball-workout-step';
 const total = workout.length;
 let current = 0;
 let savedMax = 0;
+
+// ---------- Звук (Web Audio API, без файлов) ----------
+
+let audioCtx = null;
+let soundOn = true;
+
+function ensureAudio() {
+  // создаётся по жесту пользователя — иначе браузеры блокируют звук
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) audioCtx = new Ctx();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function beep(time, freq, dur = 0.18) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.exponentialRampToValueAtTime(0.5, time + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(time);
+  osc.stop(time + dur + 0.05);
+}
+
+function playFinishSound() {
+  if (!soundOn) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  // весёлый трёхнотный сигнал
+  beep(t, 880);
+  beep(t + 0.25, 1100);
+  beep(t + 0.5, 1320, 0.4);
+}
+
+// ---------- Цикличный будильник до касания экрана ----------
+
+const alarm = {
+  interval: null,
+  vibrateInterval: null,
+};
+
+function startAlarm() {
+  stopAlarm();
+  els.alarm.hidden = false;
+  playFinishSound();
+  alarm.interval = setInterval(playFinishSound, 1400);
+  // вибрация тоже повторяется
+  if (navigator.vibrate) {
+    navigator.vibrate([300, 150, 300]);
+    alarm.vibrateInterval = setInterval(() => navigator.vibrate([300, 150, 300]), 1400);
+  }
+}
+
+function stopAlarm() {
+  clearInterval(alarm.interval);
+  clearInterval(alarm.vibrateInterval);
+  alarm.interval = null;
+  alarm.vibrateInterval = null;
+  els.alarm.hidden = true;
+}
+
+// касание по оверлею (или в любом месте) останавливает звонок
+els.alarm.addEventListener('pointerdown', stopAlarm);
 
 // ---------- Таймер ----------
 
@@ -308,7 +378,7 @@ function tick() {
   if (timer.total <= 0) {
     stopTimer();
     timer.done = true;
-    if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+    startAlarm();
     renderTimer();
     els.timerStart.textContent = '✔ Готово!';
   }
@@ -316,6 +386,7 @@ function tick() {
 
 els.timerStart.addEventListener('click', () => {
   if (timer.done) return;
+  ensureAudio(); // разблокировка аудио по первому касанию
   if (timer.running) {
     stopTimer();
     renderTimer();
@@ -328,6 +399,13 @@ els.timerStart.addEventListener('click', () => {
 
 els.timerReset.addEventListener('click', () => {
   setTimer(workout[current].duration);
+});
+
+els.soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  els.soundBtn.textContent = soundOn ? '🔊' : '🔇';
+  els.soundBtn.setAttribute('aria-label', soundOn ? 'Выключить звук' : 'Включить звук');
+  if (soundOn) ensureAudio();
 });
 
 // ---------- Рендер шага ----------
@@ -373,11 +451,13 @@ function renderStep() {
 function go(delta) {
   const next = current + delta;
   if (next < 0 || next >= total) return;
+  stopAlarm(); // уход на другой шаг гасит звонок
   current = next;
   renderStep();
 }
 
 function finishWorkout() {
+  stopAlarm();
   stopTimer();
   localStorage.removeItem(STORE_KEY);
   els.app.hidden = true;

@@ -1,4 +1,4 @@
-/* Баскетбольная тренировка — мобильный интерфейс */
+/* Баскетбольная тренировка — мобильный интерфейс (v2: glow / glass design) */
 
 * {
   margin: 0;
@@ -7,15 +7,18 @@
 }
 
 :root {
-  --bg: #101418;
-  --bg-card: #1a2129;
-  --bg-track: #232c36;
+  --bg: #0b0e13;
+  --bg-card: rgba(26, 33, 43, 0.72);
+  --bg-card-solid: #1a2129;
+  --bg-track: rgba(255, 255, 255, 0.06);
   --text: #f2f5f7;
-  --text-dim: #97a3ad;
-  --accent: #ff8a2b;      /* баскетбольный оранжевый */
-  --accent-dark: #d96f14;
+  --text-dim: #93a1ad;
+  --accent: #ff8a2b;          /* баскетбольный оранжевый */
+  --accent-2: #ffb15c;
+  --accent-glow: rgba(255, 138, 43, 0.35);
   --ok: #35c26e;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 1.35rem;
 }
 
 html {
@@ -29,9 +32,50 @@ body {
   line-height: 1.55;
   min-height: 100dvh;
   /* место под фиксированные панели + safe-area (iPhone «челка») */
-  padding-top: calc(64px + env(safe-area-inset-top));
-  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  padding-top: calc(72px + env(safe-area-inset-top));
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+/* ---------- Атмосферный фон ---------- */
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+body::before {
+  width: 70vmax;
+  height: 70vmax;
+  top: -25vmax;
+  right: -25vmax;
+  background: radial-gradient(circle, rgba(255, 138, 43, 0.18), transparent 65%);
+  animation: float-a 14s ease-in-out infinite alternate;
+}
+
+body::after {
+  width: 60vmax;
+  height: 60vmax;
+  bottom: -25vmax;
+  left: -25vmax;
+  background: radial-gradient(circle, rgba(53, 194, 110, 0.12), transparent 65%);
+  animation: float-b 18s ease-in-out infinite alternate;
+}
+
+@keyframes float-a {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-6vmax, 4vmax) scale(1.12); }
+}
+
+@keyframes float-b {
+  from { transform: translate(0, 0) scale(1.1); }
+  to   { transform: translate(5vmax, -5vmax) scale(1); }
 }
 
 /* ---------- Верхняя панель ---------- */
@@ -42,9 +86,11 @@ body {
   left: 0;
   right: 0;
   z-index: 10;
-  background: var(--bg-card);
+  background: rgba(16, 20, 26, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--bg-track);
-  padding: 0.75rem 1rem 0.6rem;
+  padding: 0.75rem 1rem 0.65rem;
   padding-top: calc(0.75rem + env(safe-area-inset-top));
 }
 
@@ -53,7 +99,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.55rem;
 }
 
 .step-counter {
@@ -61,22 +107,25 @@ body {
   font-weight: 600;
   color: var(--text-dim);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .section-badge {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent);
-  background: rgba(255, 138, 43, 0.12);
-  padding: 0.25rem 0.7rem;
+  color: var(--accent-2);
+  background: linear-gradient(135deg, rgba(255, 138, 43, 0.18), rgba(255, 138, 43, 0.08));
+  border: 1px solid rgba(255, 138, 43, 0.25);
+  padding: 0.3rem 0.8rem;
   border-radius: 999px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-shadow: 0 0 18px rgba(255, 138, 43, 0.12);
 }
 
 .progress-track {
-  height: 6px;
+  height: 7px;
   border-radius: 999px;
   background: var(--bg-track);
   overflow: hidden;
@@ -84,9 +133,27 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   border-radius: 999px;
-  transition: width 0.35s ease;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 12px var(--accent-glow);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  animation: sheen 2.4s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  from { background-position: -80% 0; }
+  to   { background-position: 180% 0; }
 }
 
 /* ---------- Карточка упражнения ---------- */
@@ -95,39 +162,71 @@ main {
   width: 100%;
   max-width: 34rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.1rem;
 }
 
 .card {
+  position: relative;
   background: var(--bg-card);
-  border: 1px solid var(--bg-track);
-  border-radius: 1.25rem;
-  padding: 1.5rem 1.25rem;
-  animation: appear 0.25s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.3rem;
+  animation: appear 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* мягкое оранжевое свечение сверху карточки */
+.card::before {
+  content: "";
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 120px;
+  background: radial-gradient(ellipse, var(--accent-glow), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
 }
 
 @keyframes appear {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
 
 .card-head {
   display: flex;
-  gap: 0.9rem;
+  gap: 0.95rem;
   align-items: flex-start;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.4rem;
 }
 
 .step-icon {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   line-height: 1;
   flex-shrink: 0;
+  width: 3.6rem;
+  height: 3.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, rgba(255, 138, 43, 0.22), rgba(255, 138, 43, 0.08));
+  border: 1px solid rgba(255, 138, 43, 0.28);
+  box-shadow: 0 6px 18px rgba(255, 138, 43, 0.15);
 }
 
 .step-title {
-  font-size: 1.45rem;
-  line-height: 1.25;
-  margin-bottom: 0.2rem;
+  font-size: 1.5rem;
+  line-height: 1.22;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.015em;
+  background: linear-gradient(180deg, #ffffff, #c9d3dc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .step-goal {
@@ -138,22 +237,59 @@ main {
 /* ---------- Таймер ---------- */
 
 .timer {
-  background: var(--bg-track);
-  border-radius: 1rem;
-  padding: 1rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--bg-track);
+  border-radius: 1.15rem;
+  padding: 1.15rem 1rem;
   text-align: center;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.4rem;
+}
+
+/* светящееся кольцо-индикатор вокруг цифр */
+.timer::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(1.15rem + 3px);
+  background: var(--accent-glow);
+  opacity: 0.55;
+  z-index: -1;
+  mask: linear-gradient(#000 0 0) content-box exclude,
+        linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude,
+                linear-gradient(#000 0 0);
+  padding: 3px;
+  transition: opacity 0.3s ease;
+}
+
+.timer.running::before {
+  opacity: 1;
+  box-shadow: 0 0 22px var(--accent-glow);
+  animation: pulse-ring 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.5); }
+}
+
+.timer.done::before {
+  background: var(--ok);
+  opacity: 0.9;
 }
 
 .timer-time {
-  font-size: 3rem;
+  font-size: 3.2rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.65rem;
+  text-shadow: 0 0 28px var(--accent-glow);
+  transition: color 0.3s ease;
 }
 
-.timer-time.running { color: var(--accent); }
+.timer-time.running { color: var(--accent-2); }
 .timer-time.done { color: var(--ok); }
 
 .timer-buttons {
@@ -164,53 +300,128 @@ main {
 
 .btn-timer {
   min-width: 9rem;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #f2711c);
   color: #17110a;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(255, 138, 43, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
+
+.btn-timer:hover { filter: brightness(1.07); }
 
 .btn-timer-reset {
   min-width: 3.5rem;
   flex: 0 0 auto;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-dim);
-  border: 1px solid var(--text-dim);
+  border: 1px solid var(--bg-track);
   font-size: 1.2rem;
 }
+
+.btn-timer-reset:hover { color: var(--text); }
 
 /* ---------- Список инструкций ---------- */
 
 .step-points {
   list-style: none;
   display: grid;
-  gap: 0.7rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+  counter-reset: point;
 }
 
 .step-points li {
   display: flex;
-  gap: 0.65rem;
+  gap: 0.7rem;
   font-size: 1rem;
   color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  counter-increment: point;
+  animation: appear 0.3s ease backwards;
 }
 
+.step-points li:nth-child(1) { animation-delay: 0.05s; }
+.step-points li:nth-child(2) { animation-delay: 0.1s; }
+.step-points li:nth-child(3) { animation-delay: 0.15s; }
+.step-points li:nth-child(4) { animation-delay: 0.2s; }
+
 .step-points li::before {
-  content: "";
+  content: counter(point);
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  width: 1.45rem;
+  height: 1.45rem;
   border-radius: 50%;
-  background: var(--accent);
-  margin-top: 0.55rem;
+  background: linear-gradient(135deg, rgba(255, 138, 43, 0.25), rgba(255, 138, 43, 0.1));
+  border: 1px solid rgba(255, 138, 43, 0.35);
+  color: var(--accent-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  margin-top: 0.05rem;
 }
 
 .step-tip {
   font-size: 0.9rem;
   color: var(--text-dim);
-  background: var(--bg-track);
+  background: linear-gradient(135deg, rgba(255, 138, 43, 0.09), rgba(255, 138, 43, 0.03));
+  border: 1px solid rgba(255, 138, 43, 0.2);
   border-left: 3px solid var(--accent);
-  border-radius: 0 0.5rem 0.5rem 0;
-  padding: 0.7rem 0.9rem;
+  border-radius: 0 0.7rem 0.7rem 0;
+  padding: 0.75rem 0.95rem;
+}
+
+/* ---------- Оверлей «время вышло» ---------- */
+
+.alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  background: rgba(11, 14, 19, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+  animation: appear 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.alarm-overlay[hidden] { display: none; }
+
+.alarm-emoji {
+  font-size: 5rem;
+  animation: ring-shake 0.7s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+}
+
+@keyframes ring-shake {
+  0%, 100% { transform: rotate(-14deg); }
+  50%      { transform: rotate(14deg); }
+}
+
+.alarm-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent-2);
+}
+
+.alarm-hint {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  animation: hint-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
 }
 
 /* ---------- Экран завершения ---------- */
@@ -230,10 +441,21 @@ main {
   text-align: center;
 }
 
+.finish-card::before {
+  background: radial-gradient(ellipse, rgba(53, 194, 110, 0.3), transparent 70%);
+}
+
 .finish-emoji {
-  font-size: 4rem;
+  font-size: 4.2rem;
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
+  animation: bounce 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px rgba(255, 138, 43, 0.35));
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
 }
 
 .finish-card .step-title {
@@ -242,25 +464,29 @@ main {
 
 .finish-text {
   color: var(--text-dim);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.6rem;
 }
 
 .finish-stats {
   list-style: none;
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  margin-bottom: 1.75rem;
+  gap: 2.2rem;
+  margin-bottom: 1.85rem;
 }
 
 .finish-stats li {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.15rem;
 }
 
 .finish-stats strong {
-  font-size: 2rem;
-  color: var(--accent);
+  font-size: 2.1rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .finish-stats span {
@@ -274,10 +500,10 @@ main {
   font-family: var(--font);
   font-size: 1.05rem;
   border: none;
-  border-radius: 0.9rem;
+  border-radius: 0.95rem;
   padding: 1rem 1.25rem;
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.15s ease;
+  transition: transform 0.12s ease, opacity 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
   touch-action: manipulation;
 }
 
@@ -286,18 +512,28 @@ main {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #f2711c);
   color: #17110a;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(255, 138, 43, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
+
+.btn-primary:hover { filter: brightness(1.07); }
 
 .btn-nav {
   flex: 1;
   min-height: 60px;
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
   font-weight: 600;
   border: 1px solid var(--bg-track);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .btn-nav:disabled {
@@ -326,7 +562,9 @@ main {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  background: var(--bg-card);
+  background: rgba(16, 20, 26, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--bg-track);
   max-width: none;
 }
@@ -338,19 +576,29 @@ main {
     max-width: 34rem;
     left: 50%;
     transform: translateX(-50%);
-    border-radius: 1rem 1rem 0 0;
+    border-radius: 1.1rem 1.1rem 0 0;
+    border: 1px solid var(--bg-track);
+    border-bottom: none;
   }
   .topbar {
     max-width: 34rem;
     left: 50%;
     transform: translateX(-50%);
-    border-radius: 0 0 1rem 1rem;
+    border-radius: 0 0 1.1rem 1.1rem;
     border-left: 1px solid var(--bg-track);
     border-right: 1px solid var(--bg-track);
   }
 }
 
+/* ---------- Доступность ---------- */
+
 @media (prefers-reduced-motion: reduce) {
-  .card { animation: none; }
+  .card,
+  .step-points li { animation: none; }
   .progress-fill { transition: none; }
+  .progress-fill::after,
+  .finish-emoji,
+  .timer.running::before { animation: none; }
+  body::before,
+  body::after { animation: none; }
 }
