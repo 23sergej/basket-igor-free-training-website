@@ -346,6 +346,7 @@ main {
 .step-points li:nth-child(2) { animation-delay: 0.1s; }
 .step-points li:nth-child(3) { animation-delay: 0.15s; }
 .step-points li:nth-child(4) { animation-delay: 0.2s; }
+.step-points li:nth-child(5) { animation-delay: 0.25s; }
 
 .step-points li::before {
   content: counter(point);
@@ -492,6 +493,64 @@ main {
 .finish-stats span {
   font-size: 0.8rem;
   color: var(--text-dim);
+}
+
+/* ---------- Экран выбора сложности ---------- */
+
+.level-screen {
+  min-height: 60dvh;
+  display: flex;
+  align-items: center;
+}
+
+/* перебивает display: flex выше, когда стоит атрибут hidden */
+.level-screen[hidden] {
+  display: none;
+}
+
+.level-buttons {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.btn-level {
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: 1px solid var(--bg-track);
+  padding: 0.9rem 1.1rem;
+}
+
+.btn-level span {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.btn-level:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.btn-level[data-active="true"] {
+  border-color: rgba(255, 138, 43, 0.5);
+  background: rgba(255, 138, 43, 0.12);
+  box-shadow: 0 0 18px rgba(255, 138, 43, 0.15);
+}
+
+.level-hint {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.level-badge {
+  cursor: pointer;
+  font-family: var(--font);
+  flex-shrink: 0;
 }
 
 /* ---------- Кнопки ---------- */

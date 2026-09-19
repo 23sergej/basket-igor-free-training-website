@@ -237,6 +237,86 @@ const workout = [
   },
 ];
 
+// ---------- Сложность ----------
+
+const LEVELS = {
+  easy: { label: 'Легкий', icon: '🌱', factor: 0.75 },
+  medium: { label: 'Средний', icon: '⚡', factor: 1 },
+  hard: { label: 'Сложный', icon: '🔥', factor: 1.25 },
+};
+
+// Дополнительный пункт «усложнение/упрощение» для каждого упражнения
+const LEVEL_NOTES = {
+  'Суставная разминка': {
+    easy: 'Сделай по 6 повторений в каждую сторону и не гони темп.',
+    hard: 'Увеличь до 15 повторений и добавь вращения стопами на носках.',
+  },
+  'Бег и приставные шаги': {
+    easy: 'Беги в лёгком темпе, бег спиной замени на обычный бег.',
+    hard: 'Каждый круг заканчивай 10-секундным ускорением.',
+  },
+  'Динамическая растяжка': {
+    easy: 'Сократи количество повторений вдвое.',
+    hard: 'После каждого упражнения — 5 взрывных прыжков вверх.',
+  },
+  'Низкий дриблинг на месте': {
+    easy: 'Мяч может идти на уровне пояса — главное не смотреть вниз.',
+    hard: 'По 15 секунд каждой минуты веди мяч с закрытыми глазами.',
+  },
+  'Кроссовер на месте': {
+    easy: 'Кроссовер на уровне пояса, темп комфортный.',
+    hard: 'Всю минуту — в низкой стойке, добавь двойной кроссовер.',
+  },
+  'Дриблинг между ног и за спиной': {
+    easy: 'Начни с медленного темпа и высоких мячей.',
+    hard: 'Заканчивай каждую минуту 10-секундным спуртом на максимуме.',
+  },
+  'Дриблинг в движении': {
+    easy: 'Сначала пройди маршрут шагом, отрабатывая траекторию.',
+    hard: 'Меняй скорость каждые 5 метров — от медленной до максимальной.',
+  },
+  'Зигзаг с ускорением': {
+    easy: '3 подхода и отдых между ними до минуты.',
+    hard: '5 подходов, отдых 15 секунд, ведение на максимальной скорости.',
+  },
+  'Стопы и повороты (pivot)': {
+    easy: 'По 5 поворотов в каждую сторону и спокойный темп.',
+    hard: 'После каждого поворота — передача в стену в прыжке.',
+  },
+  'Смена темпа с мячом': {
+    easy: '4–5 повторов за подход, между подходами отдых 30 секунд.',
+    hard: 'Каждое ускорение начинай с кроссовера или перевода за спину.',
+  },
+  'Броски с 5 точек': {
+    easy: 'Начни с 1,5–2 метров, с каждой точки достаточно одного попадания.',
+    hard: 'Отступи на 4–5 метров и забивай с каждой точки по 3 раза подряд.',
+  },
+  'Бросок после дриблинга': {
+    easy: 'По 6 повторов в каждую сторону и ближе к кольцу.',
+    hard: 'Все броски — с дальней дистанции, добавь 10 бросков после двух изменений направления.',
+  },
+  'Штрафные броски': {
+    easy: '2 серии из 5, отдыхай до минуты.',
+    hard: 'Каждый промах — спринт до лицевой линии и обратно.',
+  },
+  'Микан-дрилл': {
+    easy: 'Подходы по 20 секунд, отдых до 40 секунд.',
+    hard: 'Подходы по 45 секунд, работай только слабой рукой.',
+  },
+  'Лэй-апы с двух сторон': {
+    easy: 'По 6 повторов с каждой стороны, темп спокойный.',
+    hard: 'Каждый лэй-ап — с одним ударом мяча об пол перед финишем.',
+  },
+  'Финиш после смены направления': {
+    easy: 'По 5 повторов в каждую сторону без обманных шагов.',
+    hard: 'Добавь европейский шаг и бросок-«лоб» (floater) по 5 раз.',
+  },
+  'Финальный челлендж': {
+    easy: 'Промах на штрафных — 5 приседаний.',
+    hard: '«Вокруг мира»: промах — серия начинается заново.',
+  },
+};
+
 // ---------- Элементы ----------
 
 const els = {
@@ -261,12 +341,36 @@ const els = {
   prevBtn: document.getElementById('prev-btn'),
   nextBtn: document.getElementById('next-btn'),
   restartBtn: document.getElementById('restart-btn'),
+  levelScreen: document.getElementById('level-screen'),
+  levelBtns: document.querySelectorAll('.btn-level'),
+  levelBtn: document.getElementById('level-btn'),
+  levelHint: document.getElementById('level-hint'),
+  finishMinutes: document.getElementById('finish-minutes'),
 };
 
 const STORE_KEY = 'basketball-workout-step';
+const LEVEL_KEY = 'basketball-workout-level';
 const total = workout.length;
 let current = 0;
 let savedMax = 0;
+
+let level = localStorage.getItem(LEVEL_KEY);
+if (!LEVELS[level]) level = 'medium';
+
+// Время упражнения с поправкой на сложность (кратно 30 сек, минимум 60)
+function scaledDuration(step) {
+  const raw = Math.round((step.duration * LEVELS[level].factor) / 30) * 30;
+  return Math.max(60, raw);
+}
+
+// Пункты упражнения: базовые + заметка текущей сложности
+function stepPoints(step) {
+  const pts = step.points.slice();
+  const notes = LEVEL_NOTES[step.title];
+  const note = notes && notes[level];
+  if (note) pts.push(`${LEVELS[level].icon} ${note}`);
+  return pts;
+}
 
 // ---------- Звук (Web Audio API, без файлов) ----------
 
@@ -398,7 +502,7 @@ els.timerStart.addEventListener('click', () => {
 });
 
 els.timerReset.addEventListener('click', () => {
-  setTimer(workout[current].duration);
+  setTimer(scaledDuration(workout[current]));
 });
 
 els.soundBtn.addEventListener('click', () => {
@@ -421,8 +525,9 @@ function renderStep() {
   els.title.textContent = step.title;
   els.goal.textContent = step.goal;
 
+  const points = stepPoints(step);
   els.points.innerHTML = '';
-  for (const p of step.points) {
+  for (const p of points) {
     const li = document.createElement('li');
     li.textContent = p;
     els.points.appendChild(li);
@@ -435,7 +540,7 @@ function renderStep() {
     els.tip.hidden = true;
   }
 
-  setTimer(step.duration);
+  setTimer(scaledDuration(step));
 
   els.prevBtn.hidden = false;
   els.prevBtn.disabled = current === 0;
@@ -449,6 +554,7 @@ function renderStep() {
 }
 
 function go(delta) {
+  if (!els.levelScreen.hidden) return; // экран выбора сложности — навигация выключена
   const next = current + delta;
   if (next < 0 || next >= total) return;
   stopAlarm(); // уход на другой шаг гасит звонок
@@ -463,6 +569,8 @@ function finishWorkout() {
   els.app.hidden = true;
   els.finish.hidden = false;
   els.finishSteps.textContent = String(savedMax + 1 >= total ? total : savedMax + 1);
+  const minutes = Math.round(workout.reduce((sum, s) => sum + scaledDuration(s), 0) / 60);
+  els.finishMinutes.textContent = `~${minutes}`;
   els.badge.textContent = '🏁 Завершено';
   els.bar.style.width = '100%';
   els.prevBtn.hidden = true;
@@ -514,9 +622,56 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- Старт ----------
 
+function updateLevelButton() {
+  els.levelBtn.textContent = `${LEVELS[level].icon} ${LEVELS[level].label}`;
+}
+
+function updateLevelScreen() {
+  for (const btn of els.levelBtns) {
+    btn.dataset.active = String(btn.dataset.level === level);
+  }
+  els.levelHint.hidden = current === 0 && savedMax === 0 && !localStorage.getItem(STORE_KEY);
+}
+
+function showLevelScreen() {
+  stopAlarm();
+  stopTimer();
+  updateLevelScreen();
+  els.levelScreen.hidden = false;
+  els.app.hidden = true;
+  els.finish.hidden = true;
+  els.prevBtn.hidden = true;
+  els.nextBtn.hidden = true;
+  els.badge.textContent = '🏀 Тренировка';
+  window.scrollTo({ top: 0 });
+}
+
+function pickLevel(newLevel) {
+  level = newLevel;
+  localStorage.setItem(LEVEL_KEY, level);
+  localStorage.removeItem(STORE_KEY); // смена сложности — прогресс заново
+  current = 0;
+  savedMax = 0;
+  els.levelScreen.hidden = true;
+  els.app.hidden = false;
+  els.nextBtn.hidden = false;
+  updateLevelButton();
+  renderStep();
+}
+
+for (const btn of els.levelBtns) {
+  btn.addEventListener('click', () => pickLevel(btn.dataset.level));
+}
+els.levelBtn.addEventListener('click', showLevelScreen);
+
 const stored = parseInt(localStorage.getItem(STORE_KEY), 10);
 if (!Number.isNaN(stored) && stored > 0 && stored < total) {
   current = stored;
   savedMax = stored;
 }
-renderStep();
+updateLevelButton();
+if (localStorage.getItem(LEVEL_KEY)) {
+  renderStep();
+} else {
+  showLevelScreen(); // первый запуск — сначала выбираем сложность
+}

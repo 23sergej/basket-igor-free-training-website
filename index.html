@@ -15,6 +15,7 @@
     <div class="topbar-row">
       <span id="step-counter" class="step-counter">Шаг 1 из 17</span>
       <span id="section-badge" class="section-badge">🏀 Разминка</span>
+      <button id="level-btn" class="section-badge level-badge" type="button" title="Сменить сложность">⚡ Средний</button>
     </div>
     <div class="progress-track" aria-hidden="true">
       <div id="progress-bar" class="progress-fill" style="width:0%"></div>
@@ -56,6 +57,21 @@
     <p class="alarm-hint">Коснитесь экрана, чтобы остановить</p>
   </div>
 
+  <!-- Экран выбора сложности -->
+  <main id="level-screen" class="level-screen" hidden>
+    <div class="card finish-card">
+      <span class="finish-emoji" aria-hidden="true">🏀</span>
+      <h1 class="step-title">Выбери сложность</h1>
+      <p class="finish-text">Тренировка подстроится под тебя: время упражнений и нагрузка изменятся.</p>
+      <div class="level-buttons">
+        <button class="btn btn-level" type="button" data-level="easy">🌱 Легкий<span>Короче по времени, мягче нагрузка</span></button>
+        <button class="btn btn-level" type="button" data-level="medium">⚡ Средний<span>Классический сбалансированный план</span></button>
+        <button class="btn btn-level" type="button" data-level="hard">🔥 Сложный<span>Дольше и интенсивнее — для продвинутых</span></button>
+      </div>
+      <p id="level-hint" class="level-hint" hidden>Смена сложности начнёт тренировку с начала</p>
+    </div>
+  </main>
+
   <!-- Экран завершения -->
   <main id="finish-screen" class="finish-screen" hidden>
     <div class="card finish-card">
@@ -64,7 +80,7 @@
       <p class="finish-text">Отличная работа! Ты прошёл все шаги — разминку, дриблинг, смену направления, броски и финиш у кольца.</p>
       <ul class="finish-stats">
         <li><strong id="finish-steps">17</strong><span>упражнений выполнено</span></li>
-        <li><strong>~60</strong><span>минут работы</span></li>
+        <li><strong id="finish-minutes">~60</strong><span>минут работы</span></li>
       </ul>
       <button id="restart-btn" class="btn btn-primary btn-big" type="button">↺ Начать заново</button>
     </div>
